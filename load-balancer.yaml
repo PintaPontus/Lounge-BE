@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lounge-lb
+spec:
+  selector:
+    app: lounge-be
+  ports:
+    - protocol: TCP
+      name: http
+      port: 8080
+      targetPort: 8080
+    - protocol: TCP
+      name: https
+      port: 8443
+      targetPort: 8443
+  type: LoadBalancer
+  

@@ -1,23 +1,38 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: Lounge-BE
+  name: lounge-be
   labels:
-    app: Lounge-BE
+    app: lounge-be
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: Lounge-BE
+      app: lounge-be
   template:
     metadata:
-      name: Lounge-BE
+      name: lounge-be
       labels:
-        app: Lounge-BE
+        app: lounge-be
     spec:
       containers:
-        - name: Lounge-BE
+        - name: lounge-be
           image: lounge:latest
+          env:
+            - name: DS_PSW
+              value: password
+            - name: DS_URL
+              value: jdbc:postgresql://10.10.0.20:5432/lounge
+            - name: DS_USER
+              value: root
+          imagePullPolicy: IfNotPresent
+        - name: postgres
+          image: postgres:latest
+          env:
+            - name: POSTGRES_USER
+              value: root
+            - name: POSTGRES_PASSWORD
+              value: password
           imagePullPolicy: IfNotPresent
       restartPolicy: Always
       
