@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: Lounge-BE
+  labels:
+    app: Lounge-BE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: Lounge-BE
+  template:
+    metadata:
+      name: Lounge-BE
+      labels:
+        app: Lounge-BE
+    spec:
+      containers:
+        - name: Lounge-BE
+          image: lounge:latest
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      
