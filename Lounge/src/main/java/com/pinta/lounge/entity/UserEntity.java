@@ -16,8 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Table(name = "user", schema = "user", catalog = "lounge")
 public class UserEntity {
 
-    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     @Column(name = "id")
     private Long id;
 
