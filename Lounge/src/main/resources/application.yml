@@ -1,6 +1,14 @@
+lounge:
+  auth:
+    key: ${AUTH_KEY}
+    expiration: ${AUTH_EXPIRATION:1000}
 spring:
   datasource:
     driverClassName: org.postgresql.Driver
     url: ${DS_URL}
     username: ${DS_USER}
     password: ${DS_PSW}
+  jpa:
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
