@@ -1,6 +1,6 @@
 package com.pinta.lounge.entity;
 
-import com.pinta.lounge.dto.Credentials;
+import com.pinta.lounge.dto.SignUpCredentials;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,10 +30,9 @@ public class UserEntity {
     @Column(name = "password")
     private String password;
 
-    public UserEntity(Credentials credentials, PasswordEncoder encoder) {
-        this.email = credentials.getEmail();
-        this.username = credentials.getUsername();
-        this.password = credentials.encodePassword(encoder);
+    public UserEntity(SignUpCredentials signUp, PasswordEncoder encoder) {
+        this.email = signUp.getEmail();
+        this.username = signUp.encodePassword(encoder);
     }
 }
 

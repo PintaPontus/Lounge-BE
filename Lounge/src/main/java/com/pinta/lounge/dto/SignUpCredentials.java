@@ -8,7 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Credentials {
+public class SignUpCredentials {
     private String username;
     private String email;
     private String password;
