@@ -48,6 +48,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthFilter authFilter() {
+        return new AuthFilter();
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests((auth) -> auth
@@ -58,7 +63,7 @@ public class SecurityConfig {
             )
             .sessionManagement(session->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(new AuthFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(authFilter(), UsernamePasswordAuthenticationFilter.class)
             .build();
     }
 }

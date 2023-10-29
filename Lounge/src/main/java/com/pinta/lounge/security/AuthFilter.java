@@ -9,13 +9,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Objects;
 
-@Component
 public class AuthFilter extends OncePerRequestFilter {
 
     @Autowired
@@ -32,7 +30,8 @@ public class AuthFilter extends OncePerRequestFilter {
         String token = extractBearerToken(request);
 
         if(Objects.nonNull(token)){
-            UserPrincipal user = userAuthService.loadById(jwtUtils.decodeId(token));
+            Long id = jwtUtils.decodeId(token);
+            UserPrincipal user = userAuthService.loadById(id);
 
             SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(

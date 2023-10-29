@@ -1,34 +1,25 @@
 package com.pinta.lounge.controller;
 
+import com.pinta.lounge.dto.Credentials;
 import com.pinta.lounge.entity.UserEntity;
 import com.pinta.lounge.repository.UserRepo;
 import com.pinta.lounge.security.JWTUtils;
-import com.pinta.lounge.security.UserAuthService;
-import com.pinta.lounge.security.UserPrincipal;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-
-    @Autowired
-    private UserAuthService userAuthService;
 
     @Autowired
     private UserRepo userRepo;
@@ -40,49 +31,38 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private AuthenticationManager authManager;
+    private HttpServletRequest request;
 
     @PostMapping("/signin")
-    public ResponseEntity<UserEntity> signin(@RequestBody Credentials credentials){
-        UserEntity user = userRepo.findUser(credentials.getUsername())
-            .orElseThrow(()->new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-        if(!passwordEncoder.matches(credentials.getPassword(), user.getPassword())){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<Object> signin(@RequestBody Credentials credentials) {
+        UserEntity user = userRepo.findUser(credentials.getUsername()).orElse(null);
+
+        if (Objects.isNull(user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User Not Found");
         }
+
+        if(!passwordEncoder.matches(credentials.getPassword(), user.getPassword())){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Wrong Credentials");
+        }
+
         return ResponseEntity.ok()
-            .header(HttpHeaders.AUTHORIZATION, ("Bearer ").concat(jwtUtils.generateToken(user.getId())))
+            .header(HttpHeaders.AUTHORIZATION, jwtUtils.generateToken(user))
             .body(user);
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UserEntity> signup(@RequestBody Credentials credentials){
-        Optional<UserEntity> existingUser = userRepo.findUser(credentials.getUsername());
-        if(existingUser.isPresent()){
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
+    public ResponseEntity<Object> signup(@RequestBody Credentials credentials) {
+        UserEntity existingUser = userRepo.findUser(credentials.getUsername()).orElse(null);
+
+        if (Objects.isNull(existingUser)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("User Already Present");
         }
-        UserEntity user = userRepo.save(
-            new UserEntity()
-                .setUsername(credentials.getUsername())
-                .setEmail(credentials.getEmail())
-                .setPassword(passwordEncoder.encode(credentials.getPassword()))
-        );
+
+        UserEntity newUser = userRepo.save(new UserEntity(credentials, passwordEncoder));
+
         return ResponseEntity.ok()
-            .header(HttpHeaders.AUTHORIZATION, ("Bearer ").concat(jwtUtils.generateToken(user.getId())))
-            .body(user);
-    }
-
-    @GetMapping("/logout")
-    public ResponseEntity<Void> logout(){
-        return ResponseEntity.ok().build();
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Credentials{
-        private String username;
-        private String email;
-        private String password;
+            .header(HttpHeaders.AUTHORIZATION, jwtUtils.generateToken(newUser))
+            .body(newUser);
     }
 
 }

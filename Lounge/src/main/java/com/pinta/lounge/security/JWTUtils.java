@@ -3,10 +3,12 @@ package com.pinta.lounge.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.pinta.lounge.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.*;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Component
 public class JWTUtils {
@@ -17,7 +19,11 @@ public class JWTUtils {
     @Value("${lounge.auth.expiration}")
     private Long tokenExpiration;
 
-    public String generateToken(Long id){
+    public String generateToken(UserEntity user) {
+        return ("Bearer ").concat(generateToken(user.getId()));
+    }
+
+    public String generateToken(Long id) {
         return JWT.create()
             .withExpiresAt(
                 LocalDateTime.now()
