@@ -1,7 +1,7 @@
 package com.pinta.lounge.socket;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.Nullable;
+import org.springframework.lang.NonNull;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -35,8 +35,8 @@ public class MessageHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, @Nullable CloseStatus status) throws Exception {
-        log.info("Message Disconnection");
+    public void afterConnectionClosed(WebSocketSession session, @NonNull CloseStatus status) throws Exception {
+        log.info("Message Disconnection: {}", status);
         if (Objects.nonNull(session.getPrincipal()) && StringUtils.hasText(session.getPrincipal().getName())) {
             String name = session.getPrincipal().getName();
             log.info("Message Unsubscribe: {}", name);
