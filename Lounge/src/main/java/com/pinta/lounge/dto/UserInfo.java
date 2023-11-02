@@ -5,14 +5,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-public class MessageOut {
-    private Long userId;
-    private String content;
-    private LocalDateTime time;
+public class UserInfo {
+    private Long id;
+    private String username;
 }

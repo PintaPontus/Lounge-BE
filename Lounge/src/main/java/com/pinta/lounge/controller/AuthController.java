@@ -2,9 +2,11 @@ package com.pinta.lounge.controller;
 
 import com.pinta.lounge.dto.SignInCredentials;
 import com.pinta.lounge.dto.SignUpCredentials;
+import com.pinta.lounge.dto.UserInfo;
 import com.pinta.lounge.entity.UserEntity;
 import com.pinta.lounge.repository.UserRepo;
 import com.pinta.lounge.security.JWTUtils;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -30,6 +32,9 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
     @PostMapping("/signin")
     public ResponseEntity<Object> signin(@RequestBody SignInCredentials signIn) {
         UserEntity user = userRepo.findUser(signIn.getUsername()).orElse(null);
@@ -44,7 +49,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
             .header(HttpHeaders.AUTHORIZATION, jwtUtils.generateToken(user))
-            .body(user);
+            .body(modelMapper.map(user, UserInfo.class));
     }
 
     @PostMapping("/signup")
@@ -59,7 +64,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
             .header(HttpHeaders.AUTHORIZATION, jwtUtils.generateToken(newUser))
-            .body(newUser);
+            .body(modelMapper.map(newUser, UserInfo.class));
     }
 
 }

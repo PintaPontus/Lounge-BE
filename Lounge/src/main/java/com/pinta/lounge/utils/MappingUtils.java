@@ -10,7 +10,8 @@ public class MappingUtils {
     @Bean
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
-        modelMapper.getConfiguration().setFieldAccessLevel(Configuration.AccessLevel.PRIVATE);
+        modelMapper.getConfiguration()
+            .setFieldAccessLevel(Configuration.AccessLevel.PRIVATE);
         return modelMapper;
     }
 

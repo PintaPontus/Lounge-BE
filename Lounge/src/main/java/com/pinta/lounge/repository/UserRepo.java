@@ -18,4 +18,11 @@ public interface UserRepo extends JpaRepository<UserEntity, Long> {
             or user.username = :name
     """)
     Optional<UserEntity> findUser(@Param("name") String name);
+
+    @Query("""
+            select user.id
+            from UserEntity user
+            where user.username = :username
+        """)
+    Optional<Long> findUserId(@Param("username") String username);
 }

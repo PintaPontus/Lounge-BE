@@ -2,10 +2,13 @@ package com.pinta.lounge.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.pinta.lounge.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -36,10 +39,14 @@ public class JWTUtils {
     }
 
     public DecodedJWT decodeToken(String token){
-        return JWT.require(Algorithm.HMAC256(key))
-            .withIssuer("Lounge")
-            .build()
-            .verify(token);
+        try {
+            return JWT.require(Algorithm.HMAC256(key))
+                .withIssuer("Lounge")
+                .build()
+                .verify(token);
+        } catch (TokenExpiredException ex) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
     }
 
     public Long decodeId(String token){
