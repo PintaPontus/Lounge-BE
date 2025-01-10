@@ -1,7 +1,5 @@
 package dev.pinta.lounge
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -18,8 +16,6 @@ import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import java.sql.Connection
 import java.sql.DriverManager
-import java.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureDatabases() {
     val dbConnection: Connection = connectToPostgres(embedded = true)
