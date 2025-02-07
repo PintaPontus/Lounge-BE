@@ -8,42 +8,48 @@ import java.sql.ResultSet
 import java.sql.Statement
 
 @Serializable
-data class User(val id: Int, val username: String, val password: String, val email: String) {
+data class Message(
+    val sender: Int,
+    val recipient: Int,
+    val content: String,
+    val date: String
+) {
     companion object {
-        operator fun invoke(resultSet: ResultSet): User {
-            val id = resultSet.getInt("id")
-            val username = resultSet.getString("username")
-            val password = resultSet.getString("password")
-            val email = resultSet.getString("email")
-            return User(id, username, password, email)
+        operator fun invoke(resultSet: ResultSet): Message {
+            val sender = resultSet.getInt("sender")
+            val recipient = resultSet.getInt("recipient")
+            val content = resultSet.getString("content")
+            val date = resultSet.getString("date")
+            return Message(sender, recipient, content, date)
         }
     }
 }
 
-class UsersService(private val connection: Connection) {
+class MessagesService(private val connection: Connection) {
     companion object {
         private const val CREATE_TABLE = """
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS messages (
                 id SERIAL PRIMARY KEY,
-                username VARCHAR NOT NULL, 
-                password VARCHAR NOT NULL, 
-                email VARCHAR NOT NULL
+                sender INTEGER NOT NULL, 
+                recipient INTEGER NOT NULL, 
+                content VARCHAR NOT NULL,
+                date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
         """
         private const val SELECT_BY_ID = """
-            SELECT id, username, password, email 
-            FROM users 
+            SELECT sender, recipient, content, date
+            FROM messages 
             WHERE id = ?
         """
         private const val INSERT_ONE = """
-            INSERT INTO users (username, password, email) 
+            INSERT INTO messages (sender, recipient, content) 
             VALUES (?, ?, ?)
         """
         private const val UPDATE_ONE = """
-            UPDATE users SET username = ?, password = ?, email = ? 
+            UPDATE messages SET content = ?
             WHERE id = ?
         """
-        private const val DELETE_ONE = "DELETE FROM users WHERE id = ?"
+        private const val DELETE_ONE = "DELETE FROM messages WHERE id = ?"
 
     }
 
@@ -52,12 +58,12 @@ class UsersService(private val connection: Connection) {
         statement.executeUpdate(CREATE_TABLE)
     }
 
-    // Create new user
-    suspend fun create(user: User): Int = withContext(Dispatchers.IO) {
+    // Create new message
+    suspend fun create(message: Message): Int = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(INSERT_ONE, Statement.RETURN_GENERATED_KEYS)
-        statement.setString(1, user.username)
-        statement.setString(2, user.password)
-        statement.setString(3, user.email)
+        statement.setInt(1, message.sender)
+        statement.setInt(2, message.recipient)
+        statement.setString(3, message.content)
         statement.executeUpdate()
 
         val generatedKeys = statement.generatedKeys
@@ -68,50 +74,49 @@ class UsersService(private val connection: Connection) {
         }
     }
 
-    // Read a user
-    suspend fun read(id: Int): User = withContext(Dispatchers.IO) {
+    // Read a message
+    suspend fun read(id: Int): Message = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(SELECT_BY_ID)
         statement.setInt(1, id)
         val resultSet = statement.executeQuery()
 
         if (resultSet.next()) {
-            return@withContext User(resultSet)
+            return@withContext Message(resultSet)
         } else {
             throw Exception("Record not found")
         }
     }
 
-    // Update a user
-    suspend fun update(id: Int, user: User) = withContext(Dispatchers.IO) {
+    // Update a message
+    suspend fun update(id: Int, message: Message) = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(UPDATE_ONE)
-        statement.setString(1, user.username)
-        statement.setString(2, user.password)
-        statement.setString(3, user.email)
-        statement.setInt(4, id)
+        statement.setString(1, message.content)
+        statement.setInt(2, id)
         statement.executeUpdate()
     }
 
-    // Delete a user
+    // Delete a message
     suspend fun delete(id: Int) = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(DELETE_ONE)
         statement.setInt(1, id)
         statement.executeUpdate()
     }
 
-    suspend fun findByUsername(username: String) = withContext(Dispatchers.IO) {
+    suspend fun findByUser(user: Int) = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(
             """
-            SELECT id, username, password, email 
-            FROM users 
-            WHERE username = ?
+            SELECT sender, recipient, content, date 
+            FROM messages 
+            WHERE sender = ? OR recipient = ?
         """.trimIndent()
         )
 
-        statement.setString(1, username)
+        statement.setInt(1, user)
+        statement.setInt(2, user)
         val resultSet = statement.executeQuery()
 
         if (resultSet.next()) {
-            return@withContext User(resultSet)
+            return@withContext Message(resultSet)
         } else {
             return@withContext null
         }

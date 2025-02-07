@@ -4,7 +4,8 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
-import dev.pinta.lounge.dto.LoginInfo
+import dev.pinta.lounge.dto.AuthRequest
+import dev.pinta.lounge.dto.AuthResponse
 import dev.pinta.lounge.repository.UsersService
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -38,11 +39,11 @@ fun Application.configureSecurity(dbConnection: Connection) {
     }
     routing {
         post("/login") {
-            val info = call.receive<LoginInfo>()
+            val info = call.receive<AuthRequest>()
             log.info(info.toString())
 
             val user = userService.findByUsername(info.username)
-            log.info(user.toString())
+            log.info(encryptPassword(info.password))
 
             if (user == null || (!verifyPassword(info.password, user.password))) {
                 log.error("UNAUTHORIZED")
@@ -50,10 +51,10 @@ fun Application.configureSecurity(dbConnection: Connection) {
             } else {
                 val token = JWT.create()
                     .withIssuer(jwtIssuer)
-                    .withSubject(info.username)
+                    .withSubject(user.id.toString())
                     .sign(Algorithm.HMAC256(jwtSecret))
                 log.info("ACCESS COMPLETE")
-                call.respondText(token)
+                call.respond(AuthResponse(user.id, token))
             }
 
         }
