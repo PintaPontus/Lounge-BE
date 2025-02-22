@@ -11,10 +11,8 @@ import io.ktor.server.plugins.openapi.*
 import io.ktor.server.plugins.swagger.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.sql.Connection
 
-fun Application.configureRouting(db: Connection) {
-//    val userService = UsersService(db)
+fun Application.configureRouting() {
 
     install(ContentNegotiation) {
         json()

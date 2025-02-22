@@ -7,8 +7,8 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    val db = configureDatabases()
-    configureSecurity(db)
-    configureRouting(db)
-    configureSockets(db)
+    configureDatabase()
+    configureSecurity()
+    configureRouting()
+    configureSockets()
 }

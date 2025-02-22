@@ -6,7 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
 import dev.pinta.lounge.dto.AuthRequest
 import dev.pinta.lounge.dto.AuthResponse
-import dev.pinta.lounge.repository.UsersService
+import dev.pinta.lounge.repository.UsersRepository
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -14,17 +14,15 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.mindrot.jbcrypt.BCrypt
-import java.sql.Connection
 
-
-fun Application.configureSecurity(dbConnection: Connection) {
+fun Application.configureSecurity() {
     val jwtIssuer = environment.config.property("lounge.name").getString()
     val jwtSecret = environment.config.property("lounge.security.secret").getString()
     val verifier: JWTVerifier = JWT.require(Algorithm.HMAC256(jwtSecret))
         .withIssuer(jwtIssuer)
         .build()
 
-    val userService = UsersService(dbConnection)
+    val userRepository = UsersRepository()
 
     authentication {
         bearer("auth-bearer") {
@@ -42,7 +40,7 @@ fun Application.configureSecurity(dbConnection: Connection) {
             val info = call.receive<AuthRequest>()
             log.info(info.toString())
 
-            val user = userService.findByUsername(info.username)
+            val user = userRepository.findByUsername(info.username)
             log.info(encryptPassword(info.password))
 
             if (user == null || (!verifyPassword(info.password, user.password))) {

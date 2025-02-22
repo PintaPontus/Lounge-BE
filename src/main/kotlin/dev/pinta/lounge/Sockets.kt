@@ -6,19 +6,16 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.SignatureVerificationException
 import dev.pinta.lounge.dto.ChatMessage
 import dev.pinta.lounge.dto.ChatRTConnection
-import dev.pinta.lounge.repository.MessagesService
-import dev.pinta.lounge.repository.UsersService
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.serialization.json.Json
-import java.sql.Connection
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
-fun Application.configureSockets(db: Connection) {
+fun Application.configureSockets() {
     val jwtIssuer = environment.config.property("lounge.name").getString()
     val jwtSecret = environment.config.property("lounge.security.secret").getString()
     val verifier: JWTVerifier = JWT.require(Algorithm.HMAC256(jwtSecret))
@@ -36,9 +33,6 @@ fun Application.configureSockets(db: Connection) {
             }
         )
     }
-
-    val userService = UsersService(db)
-    val messagesService = MessagesService(db)
 
     routing {
         val broadcasts = Collections.synchronizedMap(mutableMapOf<Int, WebSocketServerSession>())
