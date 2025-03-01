@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
+import dev.pinta.lounge.auth.LoungePrincipal
 import dev.pinta.lounge.dto.AuthRequest
 import dev.pinta.lounge.dto.AuthResponse
 import dev.pinta.lounge.repository.UsersRepository
@@ -22,19 +23,25 @@ fun Application.configureSecurity() {
         .withIssuer(jwtIssuer)
         .build()
 
-    val userRepository = UsersRepository()
-
     authentication {
         bearer("auth-bearer") {
             authenticate { creds ->
                 try {
                     val decodedJWT = verifier.verify(creds.token)
-                    UserIdPrincipal(decodedJWT.subject)
+                    LoungePrincipal(
+                        decodedJWT.getClaim("id")
+                            .asLong(),
+                        decodedJWT.getClaim("username")
+                            .asString()
+                    )
                 } catch (_: JWTVerificationException) {
                 }
             }
         }
     }
+
+    val userRepository = UsersRepository()
+
     routing {
         post("/login") {
             val info = call.receive<AuthRequest>()
@@ -49,7 +56,8 @@ fun Application.configureSecurity() {
             } else {
                 val token = JWT.create()
                     .withIssuer(jwtIssuer)
-                    .withSubject(user.id.toString())
+                    .withClaim("id", user.id)
+                    .withClaim("username", user.username)
                     .sign(Algorithm.HMAC256(jwtSecret))
                 log.info("ACCESS COMPLETE")
                 call.respond(AuthResponse(user.id, token))

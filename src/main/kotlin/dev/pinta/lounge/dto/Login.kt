@@ -10,6 +10,6 @@ data class AuthRequest(
 
 @Serializable
 data class AuthResponse(
-    val userId: Int,
+    val userId: Long,
     val token: String
 )

@@ -1,11 +1,11 @@
 package dev.pinta.lounge.repository
 
 import kotlinx.coroutines.Dispatchers
-import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
-interface BaseRepository<ID, E : Any, D : IntEntity> {
+interface BaseRepository<E : Any, D : LongEntity> {
 
     suspend fun <T> suspendTransaction(block: Transaction.() -> T): T =
         newSuspendedTransaction(Dispatchers.IO, statement = block)
@@ -14,12 +14,12 @@ interface BaseRepository<ID, E : Any, D : IntEntity> {
 
     suspend fun all(): List<E>
 
-    suspend fun findById(id: ID)
+    suspend fun findById(id: Long): E?
 
-    suspend fun create(entity: E)
+    suspend fun create(entity: E): E
 
-    suspend fun update(entity: E)
+    suspend fun update(entity: E): E?
 
-    suspend fun deleteById(id: ID)
+    suspend fun deleteById(id: Long): Unit?
 
 }
