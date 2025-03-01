@@ -1,6 +1,7 @@
 package dev.pinta.lounge
 
 import dev.pinta.lounge.auth.LoungePrincipal
+import dev.pinta.lounge.dto.ChatMessageOut
 import dev.pinta.lounge.repository.MessagesRepository
 import dev.pinta.lounge.repository.UsersRepository
 import dev.pinta.lounge.serialize.InstantSerializer
@@ -29,9 +30,19 @@ fun Application.configureRouting() {
         })
     }
     install(CORS) {
-        allowHost("0.0.0.0:8081")
-        allowHost("localhost:4200")
+        allowHost("localhost:4200", schemes = listOf("http", "https"))
+        allowHost("127.0.0.1:4200", schemes = listOf("http", "https"))
+        allowMethod(HttpMethod.Options)
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Patch)
+        allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
+        allowHeader(HttpHeaders.Authorization)
+        allowHeader(HttpHeaders.AccessControlAllowHeaders)
+        allowHeader(HttpHeaders.AccessControlAllowOrigin)
         allowHeader(HttpHeaders.ContentType)
+        allowCredentials = true
     }
 
     val usersRepository = UsersRepository()
@@ -56,11 +67,22 @@ fun Application.configureRouting() {
             }
 
             get("/last-direct-messages") {
-                val id = call.principal<LoungePrincipal>()!!.id
+                val sender = call.principal<LoungePrincipal>()!!.id
+                val recipient = call.request.queryParameters["recipient"]?.toLong()
+                    ?: throw MissingRequestParameterException("recipient")
                 val page = call.request.queryParameters["page"]?.toLong() ?: 0
                 val size = call.request.queryParameters["size"]?.toInt() ?: 20
 
-                call.respond(messagesRepository.findByUserPaged(id, page, size))
+                call.respond(
+                    messagesRepository.findByUserPaged(sender, recipient, page, size)
+                        .map {
+                            ChatMessageOut(
+                                it.sender,
+                                it.content,
+                                it.date,
+                            )
+                        }
+                )
             }
 
 //            TODO: implement group chats
