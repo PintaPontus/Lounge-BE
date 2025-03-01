@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.or
 import java.time.Instant
@@ -81,12 +82,15 @@ class MessagesRepository : BaseRepository<Message, MessageDAO> {
             ?.let { daoToModel(it) }
     }
 
-    suspend fun findByUserPaged(id: Long, page: Long, size: Int) = suspendTransaction {
-        MessageDAO.find { ((MessageTable.sender eq id) or (MessageTable.recipient eq id)) }
+    suspend fun findByUserPaged(sender: Long, recipient: Long, page: Long, size: Int) = suspendTransaction {
+        MessageDAO.find {
+            ((MessageTable.sender eq sender) and (MessageTable.recipient eq recipient)) or ((MessageTable.sender eq recipient) and (MessageTable.recipient eq sender))
+        }
             .orderBy(MessageTable.date to SortOrder.DESC)
             .limit(size)
             .offset(start = (page * size))
             .map(::daoToModel)
+            .reversed()
     }
 
 }

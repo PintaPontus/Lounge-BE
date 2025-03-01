@@ -68,7 +68,6 @@ fun Application.configureSockets() {
 
 //            SETUP
             broadcasts[senderId] = this
-            outgoing.send(Frame.Text("CONNECTED $senderId WITH TO ${connection.recipient}"))
 
             try {
 //                LOOP
