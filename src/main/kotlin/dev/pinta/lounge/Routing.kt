@@ -57,9 +57,8 @@ fun Application.configureRouting() {
 
             get("/last-direct-messages") {
                 val id = call.principal<LoungePrincipal>()!!.id
-                val page = call.request.queryParameters["page"]?.toLong()
-                    ?: throw MissingRequestParameterException("'page' param missing")
-                val size = call.request.queryParameters["size"]?.toInt() ?: 10
+                val page = call.request.queryParameters["page"]?.toLong() ?: 0
+                val size = call.request.queryParameters["size"]?.toInt() ?: 20
 
                 call.respond(messagesRepository.findByUserPaged(id, page, size))
             }
