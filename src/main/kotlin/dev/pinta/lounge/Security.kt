@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
+import dev.pinta.lounge.auth.JWTClaims
 import dev.pinta.lounge.auth.LoungePrincipal
 import dev.pinta.lounge.dto.AuthRequest
 import dev.pinta.lounge.dto.AuthResponse
@@ -29,9 +30,9 @@ fun Application.configureSecurity() {
                 try {
                     val decodedJWT = verifier.verify(creds.token)
                     LoungePrincipal(
-                        decodedJWT.getClaim("id")
+                        decodedJWT.getClaim(JWTClaims.ID.key)
                             .asLong(),
-                        decodedJWT.getClaim("username")
+                        decodedJWT.getClaim(JWTClaims.USER_NAME.key)
                             .asString()
                     )
                 } catch (_: JWTVerificationException) {

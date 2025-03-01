@@ -40,7 +40,7 @@ fun Application.configureRouting() {
     routing {
         staticResources("/", "static")
         openAPI(path = "openapi", swaggerFile = "openapi/documentation.yaml")
-        swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml") {}
+        swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
 
         get("/health") {
             call.respondText("Lounge has started!")

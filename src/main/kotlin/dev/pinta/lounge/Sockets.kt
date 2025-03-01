@@ -4,17 +4,21 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.SignatureVerificationException
+import dev.pinta.lounge.auth.JWTClaims
 import dev.pinta.lounge.dto.ChatMessageIn
 import dev.pinta.lounge.dto.ChatMessageOut
 import dev.pinta.lounge.dto.ChatRTConnection
 import dev.pinta.lounge.repository.Message
 import dev.pinta.lounge.repository.MessagesRepository
+import dev.pinta.lounge.serialize.InstantSerializer
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import java.time.Instant
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
@@ -28,6 +32,9 @@ fun Application.configureSockets() {
         contentConverter = KotlinxWebsocketSerializationConverter(
             Json {
                 ignoreUnknownKeys = true
+                serializersModule = SerializersModule {
+                    contextual(Instant::class) { InstantSerializer }
+                }
             }
         )
     }
@@ -49,17 +56,26 @@ fun Application.configureSockets() {
 //            START
             val connection = receiveDeserialized<ChatRTConnection>()
 
-            try {
+            val senderId = try {
 //                AUTH
-                val senderId = verifier.verify(connection.authToken).subject.toLong()
+                verifier.verify(connection.authToken)
+                    .getClaim(JWTClaims.ID.key)
+                    .asLong()
+            } catch (e: SignatureVerificationException) {
+                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Unauthorized"))
+                return@webSocket
+            }
 
-//                SETUP
-                broadcasts[senderId] = this
-                outgoing.send(Frame.Text("CONNECTED $senderId WITH TO ${connection.recipient}"))
+//            SETUP
+            broadcasts[senderId] = this
+            outgoing.send(Frame.Text("CONNECTED $senderId WITH TO ${connection.recipient}"))
 
+            try {
 //                LOOP
                 while (broadcasts.containsKey(senderId)) {
                     val message = receiveDeserialized<ChatMessageIn>()
+
+                    val timestamp = Instant.now()
 
 //                    PERSISTENCE
                     messagesRepository.create(
@@ -68,21 +84,27 @@ fun Application.configureSockets() {
                             senderId,
                             connection.recipient,
                             message.content,
-                            Instant.now(),
+                            timestamp,
                         )
                     )
 
 //                    ECHO
                     if (connection.recipient != senderId) {
-                        broadcasts[connection.recipient]?.sendSerialized(ChatMessageOut(senderId, message.content))
+                        broadcasts[connection.recipient]?.sendSerialized(
+                            ChatMessageOut(
+                                senderId,
+                                message.content,
+                                timestamp
+                            )
+                        )
                     }
                 }
 
 //                CLOSING
                 broadcasts.remove(senderId)
                 close(CloseReason(CloseReason.Codes.GOING_AWAY, "Server said BYE"))
-            } catch (_: SignatureVerificationException) {
-                close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Unauthorized"))
+            } catch (_: ClosedReceiveChannelException) {
+                broadcasts.remove(senderId)
             }
         }
     }
