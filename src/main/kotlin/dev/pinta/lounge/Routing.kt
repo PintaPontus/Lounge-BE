@@ -66,7 +66,7 @@ fun Application.configureRouting() {
                 call.respondText("Hello, ${user.username}!")
             }
 
-            get("/last-direct-messages") {
+            get("/direct-messages") {
                 val sender = call.principal<LoungePrincipal>()!!.id
                 val recipient = call.request.queryParameters["recipient"]?.toLong()
                     ?: throw MissingRequestParameterException("recipient")
@@ -86,7 +86,7 @@ fun Application.configureRouting() {
             }
 
 //            TODO: implement group chats
-//            get("/last-group-messages") {
+//            get("/group-messages") {
 //                call.request.queryParameters["page"]
 //                call.request.queryParameters["size"]
 //                call.request.queryParameters["chat"]
