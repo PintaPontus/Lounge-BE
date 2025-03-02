@@ -68,6 +68,16 @@ fun Application.configureSockets() {
 
 //            SETUP
             broadcasts[senderId] = this
+            messagesRepository.findByUserPaged(senderId, connection.recipient, 0, 20)
+                .forEach {
+                    sendSerialized(
+                        ChatMessageOut(
+                            it.sender,
+                            it.content,
+                            it.date,
+                        )
+                    )
+                }
 
             try {
 //                LOOP
