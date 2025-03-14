@@ -68,16 +68,15 @@ fun Application.configureSockets() {
 
 //            SETUP
             broadcasts[senderId] = this
-            messagesRepository.findByUserPaged(senderId, connection.recipient, 0, 20)
-                .forEach {
-                    sendSerialized(
+            sendSerialized(
+                messagesRepository.findByUserPaged(senderId, connection.recipient, 0, 20)
+                    .map {
                         ChatMessageOut(
                             it.sender,
                             it.content,
                             it.date,
                         )
-                    )
-                }
+                    })
 
             try {
 //                LOOP
@@ -100,10 +99,12 @@ fun Application.configureSockets() {
 //                    ECHO
                     if (connection.recipient != senderId) {
                         broadcasts[connection.recipient]?.sendSerialized(
-                            ChatMessageOut(
+                            listOf(
+                                ChatMessageOut(
                                 senderId,
                                 message.content,
                                 timestamp
+                                )
                             )
                         )
                     }
